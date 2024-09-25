@@ -6,7 +6,8 @@ def train(args):
         data=args.data,
         epochs=args.epochs,
         imgsz=args.imgsz,
-        device="0"
+        device="0",
+        cache=False
     )
     
     metrics = model.val()
