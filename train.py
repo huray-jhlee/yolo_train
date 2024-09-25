@@ -1,9 +1,4 @@
-import os
-import cv2
-from tqdm import tqdm
-
 from ultralytics import YOLO
-from clearml import Task, Dataset
 
 def train(args):
     model = YOLO("./yolov8n.pt")
@@ -11,9 +6,10 @@ def train(args):
         data=args.data,
         epochs=args.epochs,
         imgsz=args.imgsz,
-        device="device=0"
+        device="0"
     )
-    pass
+    
+    metrics = model.val()
 
 if __name__ == "__main__":
     import argparse
