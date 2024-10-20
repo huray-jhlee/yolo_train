@@ -16,7 +16,33 @@ def train(args):
     
     model = YOLO("./models/yolov8n.pt")
     
-    add_wandb_callback(model, enable_model_checkpointing=True)
+    # Check args
+    """
+    add_wandb_callback(
+        model: YOLO,
+        epoch_logging_interval: int = 1,
+        -> a 학습동안 prediction visualization 하는 인터벌
+        enable_model_checkpointing: bool = False,
+        -> a 아티팩트로 저장시키는 것... 은 해야지
+        enable_train_validation_logging: bool = True,
+        -> validation 데이터에 대한 예측과 GT이미지를 이미지 overlay형태로 제공
+        -> wandb.Table로 .. mean-confidence와 per-class 수치를
+        enable_validation_logging: bool = True,
+        -> Only Validation
+        enable_prediction_logging: bool = True,
+        -> each prediction..
+        max_validation_batches: Optional[int] = 1,
+        -> 
+        visualize_skeleton: Optional[bool] = True,
+        -> use in pose estimation
+    )
+    """
+    
+    add_wandb_callback(
+        model,
+        enable_model_checkpointing=True
+    )
+    
     
     train_results = model.train(
         data=args.data,
@@ -26,7 +52,8 @@ def train(args):
         cache=False if args.cache is None else args.cache,
         save_period=1,
         workers=args.workers,
-        project="food_detector"
+        project="food_detector",
+        batch=args.batch
     )
     
     metrics = model.val()
@@ -43,6 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--cache", type=str, default=None)
     parser.add_argument("--gpus", type=str)
     parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--project", type=str, )
     args = parser.parse_args()
     print(args.cache)
     
