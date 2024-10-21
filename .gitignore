@@ -168,3 +168,5 @@ output/
 models/
 runs/
 *.cache
+wandb/
+food_detector/
