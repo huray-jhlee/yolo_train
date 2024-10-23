@@ -6,13 +6,10 @@ from ultralytics import YOLO
 
 def train(args):
     
-    wandb.init(project="food_detector",
-               config={
-                   "epochs": args.epochs,
-                   "batch_size": args.batch,
-                   "resolution": args.imgsz,
-                   "gpus": args.gpus
-               })
+    wandb.init(
+        project=args.project,
+        config=vars(args)
+    )
     
     model = YOLO("./models/yolov8n.pt")
     
@@ -52,8 +49,10 @@ def train(args):
         cache=False if args.cache is None else args.cache,
         save_period=1,
         workers=args.workers,
-        project="food_detector",
-        batch=args.batch
+        project=args.project,
+        batch=args.batch,
+        mosaic=1.0,
+        mixup=0.5
     )
     
     metrics = model.val()
@@ -70,7 +69,10 @@ if __name__ == "__main__":
     parser.add_argument("--cache", type=str, default=None)
     parser.add_argument("--gpus", type=str)
     parser.add_argument("--workers", type=int, default=8)
-    parser.add_argument("--project", type=str, )
+    parser.add_argument("--project", type=str, default="food_detector")
+    parser.add_argument("--name", type=str, default=None)
+    parser.add_argument("--mosaic", type=float, default=1.0)
+    parser.add_argument("--mixup", type=float, default=0.5)
     args = parser.parse_args()
     print(args.cache)
     
