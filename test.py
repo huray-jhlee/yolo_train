@@ -4,11 +4,15 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import pickle
+import torch
 
 def test(args):
+    
+    device = f"cuda:{args.gpu}" if torch.cuda.is_available() else 'cpu'
+    
     # 1. 모델 불러오기 (필요한 모델 개수에 맞춰 추가 가능)
     model_paths = glob(f"{args.model_dir}/*.pt")
-    models = [YOLO(path) for path in model_paths]
+    models = {os.path.basename(path):YOLO(path).to(device) for path in model_paths}
 
     # 2. 테스트 데이터셋 경로 설정
     test_data = args.test_data
@@ -19,16 +23,23 @@ def test(args):
         os.makedirs(save_dir)
 
     # 4. 각 모델에 대해 성능 평가
+    # 4. 각 모델에 대해 성능 평가
     metrics = []
-    for model in models:
-        result = model.val(data=test_data)
+    for model_name, model in models.items():
+        result = model.val(
+            data=test_data,
+            project=save_dir,
+            name=model_name,
+        )
+        mp, mr, map50, map = result.mean_results()
+        
         metrics.append({
-            'model': model.model,
-            'map50': result['map50'],
-            'precision': result['precision'],
-            'recall': result['recall']
+            'model': model_name,
+            'map50': map50,
+            'map': map,
+            'precision': mp,
+            'recall': mr,
         })
-
     # 5. 성능 지표 출력 및 저장
     metrics_df = pd.DataFrame(metrics)
     metrics_csv_path = os.path.join(save_dir, "metrics.csv")
@@ -41,19 +52,30 @@ def test(args):
     print(f"Performance metrics saved to {metrics_csv_path} and {metrics_pkl_path}")
 
     # 6. 성능 지표 시각화 및 저장
-    models_names = [f"Model {i+1}" for i in range(len(models))]
+    # models_names = [f"Model {i+1}" for i in range(len(models))]
+    models_names = list(models.keys())
     map50 = [metric['map50'] for metric in metrics]
+    map_all = [metric['map'] for metric in metrics]  # mAP@0.5:0.95
     precision = [metric['precision'] for metric in metrics]
     recall = [metric['recall'] for metric in metrics]
 
-    # mAP 시각화 및 저장
+    # mAP@0.5 시각화 및 저장
     plt.bar(models_names, map50, color='blue')
     plt.title('mAP@0.5 Comparison')
     plt.xlabel('Models')
     plt.ylabel('mAP@0.5')
     map50_plot_path = os.path.join(save_dir, "map50_comparison.png")
     plt.savefig(map50_plot_path)
-    plt.close()  # 그래프를 닫아서 메모리 해제
+    plt.close()
+
+    # mAP@0.5:0.95 시각화 및 저장
+    plt.bar(models_names, map_all, color='cyan')
+    plt.title('mAP@0.5:0.95 Comparison')
+    plt.xlabel('Models')
+    plt.ylabel('mAP@0.5:0.95')
+    map_plot_path = os.path.join(save_dir, "map_comparison.png")
+    plt.savefig(map_plot_path)
+    plt.close()
 
     # Precision 시각화 및 저장
     plt.bar(models_names, precision, color='green')
@@ -81,6 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str, required=True)
     parser.add_argument("--test_data", type=str, required=True)
     parser.add_argument("--save_dir", type=str, required=True, help="Directory to save plots and metrics")
+    parser.add_argument("--gpu", type=int)
     args = parser.parse_args()
     
     test(args)
