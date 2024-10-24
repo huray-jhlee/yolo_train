@@ -1,8 +1,10 @@
+import os
+
 import wandb
+from ultralytics import YOLO
 from wandb.integration.ultralytics import add_wandb_callback
 
-from ultralytics import YOLO
-
+os.environ["OMP_NUM_THREADS"] = '8'
 
 def train(args):
     
