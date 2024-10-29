@@ -1,3 +1,4 @@
+import os
 import wandb
 from wandb.integration.ultralytics import add_wandb_callback
 
@@ -6,12 +7,28 @@ from ultralytics import YOLO
 
 def train(args):
     
-    wandb.init(
-        project=args.project,
-        config=vars(args)
-    )
+    if args.resume_wandb_id is None:
+        wandb.init(
+            project=args.project,
+            dir=args.save_dir,
+            config=vars(args)
+        )
+    else :
+        wandb.init(
+            project=args.project,
+            dir=args.save_dir,
+            config=vars(args),
+            id = args.resume_wandb_id,
+            resume="must"
+        )
+        
     
-    model = YOLO("./models/yolov8n.pt")
+    if args.resume is None:
+        model_path = "./models/yolov8n.pt"
+    else :
+        model_path = args.resume
+    
+    model = YOLO(model_path)
     
     # Check args
     """
@@ -49,10 +66,11 @@ def train(args):
         cache=False if args.cache is None else args.cache,
         save_period=1,
         workers=args.workers,
-        project=args.project,
+        project=os.path.join(args.save_dir, args.project),
         batch=args.batch,
-        mosaic=1.0,
-        mixup=0.5
+        mosaic=args.mosaic,
+        mixup=args.mixup,
+        resume=False if args.resume is None else True
     )
     
     metrics = model.val()
@@ -62,17 +80,21 @@ def train(args):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument("--wandb", action='store_true')
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch", type=int, default=64)
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--data", type=str, default="/data/food_detector_dataset/food_dataset0927/food.yaml")
     parser.add_argument("--cache", type=str, default=None)
     parser.add_argument("--gpus", type=str)
-    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--project", type=str, default="food_detector")
     parser.add_argument("--name", type=str, default=None)
     parser.add_argument("--mosaic", type=float, default=1.0)
-    parser.add_argument("--mixup", type=float, default=0.5)
+    parser.add_argument("--mixup", type=float, default=0)
+    parser.add_argument("--save_dir", type=str, default="/data2/jh/detector/")
+    parser.add_argument("--resume", type=str, default=None, help="resume model weight path")
+    parser.add_argument("--resume_wandb_id", type=str, default=None)
     args = parser.parse_args()
     print(args.cache)
     
