@@ -23,7 +23,6 @@ def test(args):
         os.makedirs(save_dir)
 
     # 4. 각 모델에 대해 성능 평가
-    # 4. 각 모델에 대해 성능 평가
     metrics = []
     for model_name, model in models.items():
         result = model.val(
@@ -101,7 +100,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_dir", type=str, required=True)
-    parser.add_argument("--test_data", type=str, required=True)
+    parser.add_argument("--test_data", type=str, default="/data2/jh/241019/test/test.yaml")
     parser.add_argument("--save_dir", type=str, required=True, help="Directory to save plots and metrics")
     parser.add_argument("--gpu", type=int)
     args = parser.parse_args()
