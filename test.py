@@ -12,6 +12,7 @@ def test(args):
     
     # 1. 모델 불러오기 (필요한 모델 개수에 맞춰 추가 가능)
     model_paths = glob(f"{args.model_dir}/*.pt")
+    model_paths = sorted(model_paths)
     models = {os.path.basename(path):YOLO(path).to(device) for path in model_paths}
 
     # 2. 테스트 데이터셋 경로 설정
