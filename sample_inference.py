@@ -25,6 +25,8 @@ def model_load(model_dir:str, device=None) -> dict:
     
     model_paths = glob(os.path.join(model_dir, "**"), recursive=True)
     model_paths = [x for x in model_paths if os.path.isfile(x)]
+    model_paths = [x for x in model_paths if ".pt" in x.split("/")[-1]]
+    model_paths = sorted(model_paths)
     
     model_dict = {}
     for model_path in model_paths:
