@@ -1,4 +1,5 @@
 import os
+import json
 import wandb
 from ultralytics import YOLO
 from wandb.integration.ultralytics import add_wandb_callback
@@ -24,7 +25,7 @@ def train(args):
         
     
     if args.resume is None:
-        model_path = "./models/yolov8n.pt"
+        model_path = "/home/ai04/jh/codes/yolo_train/models/yolov8n.pt"
     else :
         model_path = args.resume
     
@@ -57,6 +58,8 @@ def train(args):
         enable_model_checkpointing=True
     )
     
+    with open("config.json", "r") as f:
+        ModelConfig = json.load(f)
     
     train_results = model.train(
         data=args.data,
@@ -66,11 +69,17 @@ def train(args):
         cache=False if args.cache is None else args.cache,
         save_period=1,
         workers=args.workers,
-        project=os.path.join(args.save_dir, args.project),
+        project=args.project,
         batch=args.batch,
-        mosaic=args.mosaic,
-        mixup=args.mixup,
-        resume=False if args.resume is None else True
+        mosaic=ModelConfig["mosaic"],
+        mixup=ModelConfig["mixup"],
+        resume=False if args.resume is None else True,
+        pretrained=True,
+        patience=ModelConfig["patience"],
+        warmup_epochs=ModelConfig["warmup_epochs"],
+        lr0=ModelConfig["lr0"],
+        lrf=ModelConfig["lrf"],
+        cos_lr=ModelConfig["cos_lr"],
     )
     
     metrics = model.val()
