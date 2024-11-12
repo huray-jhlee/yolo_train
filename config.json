@@ -1,4 +1,5 @@
 {
+    "save_period": 1,
     "mosaic": 1.0,
     "close_mosaic": 10,
     "patience": 5,
@@ -9,5 +10,5 @@
     "lrf": 0.01,
     "box": 7.5,
     "cls": 0.5,
-    "dfl": 1.5
+    "dfl": 2.5
 }
