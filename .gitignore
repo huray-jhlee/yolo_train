@@ -171,3 +171,4 @@ runs/
 wandb/
 food_detector/
 *.png
+*.pt
