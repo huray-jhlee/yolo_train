@@ -1,14 +1,20 @@
 {
-    "save_period": 1,
-    "mosaic": 1.0,
-    "close_mosaic": 10,
+    "model": "./models/yolov8n.pt",
+    "epochs": 50,
+    "time": null,
     "patience": 5,
-    "mixup": 1,
+    "batch": 64,
+    "imgsz": 640,
+    "save_period": 1,
+    "workers": 8,
+    "optimizer": "auto",
+    "seed": 0,
     "cos_lr": false,
-    "warmup_epochs": 3,
     "lr0": 0.01,
     "lrf": 0.01,
+    "warmup_epochs": 3,
     "box": 7.5,
     "cls": 0.5,
-    "dfl": 2.5
+    "dfl": 2.5,
+    "close_mosaic": 15
 }
