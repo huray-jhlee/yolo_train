@@ -72,6 +72,7 @@ if __name__ == "__main__":
     general_group.add_argument("--wandb", action='store_true')
     general_group.add_argument("--save_dir", type=str, default="/data2/jh/detector/")
     general_group.add_argument("--resume_wandb_id", type=str, default=None)
+    general_group.add_argument("--notes", type=str, default=None)
     
     training_group = parser.add_argument_group("Training Options")
     training_group.add_argument("--model", type=str, default="./models/yolov8n.pt")
