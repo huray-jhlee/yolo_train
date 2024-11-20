@@ -7,109 +7,86 @@ from wandb.integration.ultralytics import add_wandb_callback
 os.environ["OMP_NUM_THREADS"] = '8'
 
 def train(args):
+    # General Options 필터링
+    general_args = {k: v for k, v in vars(args).items() if k in ["wandb", "save_dir", "resume_wandb_id"]}
+
+    # Training Options 필터링
+    training_args = {k: v for k, v in vars(args).items() if k in [
+        "model", "data", "epochs", "batch", "device", "cache", 
+        "workers", "project", "name", "box", "cls", "dfl", "resume"
+    ]}
     
-    with open("config.json", "r") as f:
+    # first, load augment args
+    with open("config_aug.json", "r") as f:
         ModelConfig = json.load(f)
     
-    ModelConfig.update(vars(args))
+    # seccond, overwrite training args to argument args
+    with open("config.json", "r") as f:
+        config_args = json.load(f)
+    
+    # overwirte loss weight(dfl, box, cls), epoch, batch, data
+    config_args.update(training_args)
+    ModelConfig.update(config_args)
+    general_args.update(ModelConfig)
     
     if args.resume_wandb_id is None:
         wandb.init(
             project=args.project,
             dir=args.save_dir,
-            config=ModelConfig
+            config=general_args
         )
-    else :
+    elif args.wandb :
         wandb.init(
             project=args.project,
             dir=args.save_dir,
-            config=ModelConfig,
+            config=general_args,
             id = args.resume_wandb_id,
             resume="must"
         )
         
     
     if args.resume is None:
-        model_path = ModelConfig["backbone"]
+        model_path = ModelConfig["model"]
     else :
         model_path = args.resume
     
     model = YOLO(model_path, task="detect")
     
-    # Check args
-    """
-    add_wandb_callback(
-        model: YOLO,
-        epoch_logging_interval: int = 1,
-        -> a 학습동안 prediction visualization 하는 인터벌
-        enable_model_checkpointing: bool = False,
-        -> a 아티팩트로 저장시키는 것... 은 해야지
-        enable_train_validation_logging: bool = True,
-        -> validation 데이터에 대한 예측과 GT이미지를 이미지 overlay형태로 제공
-        -> wandb.Table로 .. mean-confidence와 per-class 수치를
-        enable_validation_logging: bool = True,
-        -> Only Validation
-        enable_prediction_logging: bool = True,
-        -> each prediction..
-        max_validation_batches: Optional[int] = 1,
-        -> 
-        visualize_skeleton: Optional[bool] = True,
-        -> use in pose estimation
-    )
-    """
+    if args.wandb:
+        add_wandb_callback(
+            model,
+            enable_model_checkpointing=True
+        )
     
-    add_wandb_callback(
-        model,
-        enable_model_checkpointing=True
+    train_result = model.train(
+        **ModelConfig
     )
     
-    
-    train_results = model.train(
-        data=ModelConfig["data"],
-        epochs=ModelConfig["epochs"],
-        imgsz=ModelConfig["imgsz"],
-        device=ModelConfig["gpus"],
-        cache=False if args.cache is None else args.cache,
-        save_period=ModelConfig["save_period"],
-        workers=ModelConfig["workers"],
-        project=ModelConfig["project"],
-        batch=ModelConfig["batch"],
-        mosaic=ModelConfig["mosaic"],
-        mixup=ModelConfig["mixup"],
-        resume=False if args.resume is None else True,
-        pretrained=True,
-        patience=ModelConfig["patience"],
-        warmup_epochs=ModelConfig["warmup_epochs"],
-        lr0=ModelConfig["lr0"],
-        lrf=ModelConfig["lrf"],
-        cos_lr=ModelConfig["cos_lr"],
-    )
-    
-    metrics = model.val()
-    
-    wandb.finish()
+    if args.wandb:
+        wandb.finish()
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--wandb", action='store_true')
-    parser.add_argument("--backbone", type=str, default="./models/yolo8n.pt")
-    parser.add_argument("--box", type=float, default=7.5)
-    parser.add_argument("--cls", type=float, default=0.5)
-    parser.add_argument("--dfl", type=float, default=1.5)
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--batch", type=int, default=64)
-    parser.add_argument("--imgsz", type=int, default=640)
-    parser.add_argument("--data", type=str, default="/data/food_detector_dataset/food_dataset0927/food.yaml")
-    parser.add_argument("--cache", type=str, default=None)
-    parser.add_argument("--gpus", type=str)
-    parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--project", type=str, default="food_detector")
-    parser.add_argument("--name", type=str, default=None)
-    parser.add_argument("--save_dir", type=str, default="/data2/jh/detector/")
-    parser.add_argument("--resume", type=str, default=None, help="resume model weight path")
-    parser.add_argument("--resume_wandb_id", type=str, default=None)
+    general_group = parser.add_argument_group("General Options")
+    general_group.add_argument("--wandb", action='store_true')
+    general_group.add_argument("--save_dir", type=str, default="/data2/jh/detector/")
+    general_group.add_argument("--resume_wandb_id", type=str, default=None)
+    
+    training_group = parser.add_argument_group("Training Options")
+    training_group.add_argument("--model", type=str, default="./models/yolov8n.pt")
+    training_group.add_argument("--data", type=str, default="/data2/jh/exp4_data/241113_det4.yaml")
+    training_group.add_argument("--epochs", type=int, default=10)
+    training_group.add_argument("--batch", type=int, default=64)
+    training_group.add_argument("--device", type=str, default="4,5")
+    training_group.add_argument("--cache", type=str, default=None)
+    training_group.add_argument("--workers", type=int, default=8)
+    training_group.add_argument("--project", type=str, default="food_detector")
+    training_group.add_argument("--name", type=str, default=None)
+    training_group.add_argument("--box", type=float, default=8)
+    training_group.add_argument("--cls", type=float, default=0.5)
+    training_group.add_argument("--dfl", type=float, default=2)
+    training_group.add_argument("--resume", type=str, default=None, help="resume model weight path")
     args = parser.parse_args()
-    print(args.cache)
     
     train(args)
