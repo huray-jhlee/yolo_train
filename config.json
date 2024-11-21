@@ -15,6 +15,6 @@
     "warmup_epochs": 3,
     "box": 7.5,
     "cls": 0.5,
-    "dfl": 2.5,
+    "dfl": 1.5,
     "close_mosaic": 15
 }
