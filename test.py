@@ -1,10 +1,11 @@
+import os
+import torch
+import pickle
+import pandas as pd
+import matplotlib.pyplot as plt
+
 from glob import glob
 from ultralytics import YOLO
-import matplotlib.pyplot as plt
-import os
-import pandas as pd
-import pickle
-import torch
 
 def test(args):
     
