@@ -31,7 +31,8 @@ def test(args):
             data=test_data,
             project=save_dir,
             name=model_name,
-            conf=0.25
+            conf=0.25,
+            iou=0.5
         )
         mp, mr, map50, map = result.mean_results()
         
