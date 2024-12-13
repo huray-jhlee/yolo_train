@@ -2,7 +2,7 @@
     "model": "./models/yolov8n.pt",
     "epochs": 50,
     "time": null,
-    "patience": 5,
+    "patience": 50,
     "batch": 64,
     "imgsz": 640,
     "save_period": 1,
@@ -16,5 +16,5 @@
     "box": 7.5,
     "cls": 0.5,
     "dfl": 1.5,
-    "close_mosaic": 10
+    "close_mosaic": 15
 }

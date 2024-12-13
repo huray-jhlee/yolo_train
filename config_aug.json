@@ -11,7 +11,7 @@
     "fliplr": 0.5,
     "bgr": 0.0,
     "mosaic": 1.0,
-    "mixup": 1.0,
+    "mixup": 0.0,
     "copy_paste": 0.0,
     "auto_augment": "randaugment",
     "erasing": 0.4,
