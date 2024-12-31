@@ -65,7 +65,11 @@ def inference_with_sampled_img(model_dict: dict, sampled_datas: list, save_dir: 
     print("Start Inference and save imgs..")
     
     for model_name, model in model_dict.items():
-        pred_results = model.predict(sampled_datas)
+        pred_results = model.predict(
+            sampled_datas,
+            conf=0.25,
+            iou=0.5
+            )
     
         img_save_dir = os.path.join(save_dir, f"val-{model_name}", "images")
         os.makedirs(img_save_dir, exist_ok=True)
